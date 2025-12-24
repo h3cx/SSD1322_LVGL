@@ -33,7 +33,7 @@ constexpr int8_t PIN_RST = 16;
 
 SSD1322_LVGL display(SPI, PIN_CS, PIN_DC, PIN_RST, 8000000);
 
-static uint8_t lvgl_buf[SSD1322_LVGL::kWidth * SSD1322_LVGL::kHeight];
+static uint8_t lvgl_buf[SSD1322_LVGL::kWidth * 32];
 
 void setup() {
   lv_init();
@@ -43,9 +43,11 @@ void setup() {
                                          SSD1322_LVGL::kHeight);
   lv_display_set_color_format(disp, LV_COLOR_FORMAT_L8);
   lv_display_set_buffers(disp, lvgl_buf, nullptr, sizeof(lvgl_buf),
-                         LV_DISPLAY_RENDER_MODE_FULL);
+                         LV_DISPLAY_RENDER_MODE_PARTIAL);
   lv_display_set_user_data(disp, &display);
   lv_display_set_flush_cb(disp, SSD1322_LVGL::lvglFlush);
+  lv_display_add_event_cb(disp, SSD1322_LVGL::lvglInvalidateArea,
+                          LV_EVENT_INVALIDATE_AREA, nullptr);
 }
 
 void loop() {
@@ -57,14 +59,13 @@ void loop() {
 ## LVGL buffer and color format
 
 LVGL renders into an 8-bit luminance buffer (`LV_COLOR_FORMAT_L8`).
-The driver converts each 8-bit pixel to a 4-bit grayscale value before sending it
-over SPI.
+The driver expects this format and converts each 8-bit pixel to a 4-bit grayscale
+value before sending it over SPI. Other LVGL color formats are not supported.
 
-The rounder callback ensures the LVGL render area always aligns to 2-pixel
-boundaries so that 4bpp packed bytes are correctly formed for the SSD1322.
-Some LVGL Arduino builds do not expose `lv_display_set_rounder_cb`. In that
-case, use `LV_DISPLAY_RENDER_MODE_FULL` with a full-frame buffer (as shown
-above) to avoid odd-width flush areas.
+The invalidate-area callback ensures the LVGL render area always aligns to
+2-pixel boundaries so that 4bpp packed bytes are correctly formed for the
+SSD1322. This uses LVGL 9.4's `lv_display_add_event_cb` with
+`LV_EVENT_INVALIDATE_AREA`.
 
 ## Test helpers
 

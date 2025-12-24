@@ -8,7 +8,7 @@ constexpr int8_t PIN_RST = 16;
 
 SSD1322_LVGL display(SPI, PIN_CS, PIN_DC, PIN_RST, 8000000);
 
-static uint8_t lvgl_buf[SSD1322_LVGL::kWidth * SSD1322_LVGL::kHeight];
+static uint8_t lvgl_buf[SSD1322_LVGL::kWidth * 32];
 static lv_display_t *lvgl_display = nullptr;
 
 void setup() {
@@ -28,9 +28,11 @@ void setup() {
                                    SSD1322_LVGL::kHeight);
   lv_display_set_color_format(lvgl_display, LV_COLOR_FORMAT_L8);
   lv_display_set_buffers(lvgl_display, lvgl_buf, nullptr, sizeof(lvgl_buf),
-                         LV_DISPLAY_RENDER_MODE_FULL);
+                         LV_DISPLAY_RENDER_MODE_PARTIAL);
   lv_display_set_user_data(lvgl_display, &display);
   lv_display_set_flush_cb(lvgl_display, SSD1322_LVGL::lvglFlush);
+  lv_display_add_event_cb(lvgl_display, SSD1322_LVGL::lvglInvalidateArea,
+                          LV_EVENT_INVALIDATE_AREA, nullptr);
 
   lv_obj_t *label = lv_label_create(lv_screen_active());
   lv_label_set_text(label, "SSD1322 LVGL OK");

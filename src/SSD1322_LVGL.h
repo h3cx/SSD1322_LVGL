@@ -24,7 +24,7 @@ class SSD1322_LVGL {
 
   static void lvglFlush(lv_display_t *disp, const lv_area_t *area,
                         uint8_t *color_p);
-  static void lvglRounder(lv_display_t *disp, lv_area_t *area);
+  static void lvglInvalidateArea(lv_event_t *event);
 
  private:
   SPIClass &spi_;
@@ -38,6 +38,4 @@ class SSD1322_LVGL {
   void writeData(const uint8_t *data, size_t len);
   void setWindow(uint16_t x1, uint16_t x2, uint16_t y1, uint16_t y2);
   void initDisplay();
-
-  static uint8_t lvglColorToL8(lv_color_t color);
 };

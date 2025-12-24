@@ -132,8 +132,6 @@ void SSD1322_LVGL::lvglFlush(lv_display_t *disp, const lv_area_t *area,
   const uint16_t width = static_cast<uint16_t>(x2 - x1 + 1);
   const uint16_t height = static_cast<uint16_t>(y2 - y1 + 1);
 
-  const lv_color_t *colors = reinterpret_cast<const lv_color_t *>(color_p);
-
   panel->spi_.beginTransaction(
       SPISettings(panel->spi_freq_hz_, MSBFIRST, SPI_MODE0));
   digitalWrite(panel->cs_pin_, LOW);
@@ -144,7 +142,7 @@ void SSD1322_LVGL::lvglFlush(lv_display_t *disp, const lv_area_t *area,
     uint8_t packed = 0;
     bool high_nibble = true;
     for (uint16_t x = 0; x < width; ++x) {
-      uint8_t l8 = lvglColorToL8(colors[index++]);
+      uint8_t l8 = color_p[index++];
       uint8_t l4 = static_cast<uint8_t>(l8 >> 4);
       if (high_nibble) {
         packed = static_cast<uint8_t>(l4 << 4);
@@ -166,8 +164,11 @@ void SSD1322_LVGL::lvglFlush(lv_display_t *disp, const lv_area_t *area,
   lv_display_flush_ready(disp);
 }
 
-void SSD1322_LVGL::lvglRounder(lv_display_t *disp, lv_area_t *area) {
-  (void)disp;
+void SSD1322_LVGL::lvglInvalidateArea(lv_event_t *event) {
+  lv_area_t *area = lv_event_get_invalidated_area(event);
+  if (!area) {
+    return;
+  }
   area->x1 &= ~1;
   area->x2 |= 1;
   if (area->x2 >= static_cast<int32_t>(kWidth)) {
@@ -271,11 +272,4 @@ void SSD1322_LVGL::initDisplay() {
   writeCommand(kCmdEnterNormalMode);
   writeCommand(kCmdSetDisplayModeNormal);
   writeCommand(kCmdDisplayOn);
-}
-
-uint8_t SSD1322_LVGL::lvglColorToL8(lv_color_t color) {
-  lv_color32_t c32 = lv_color_to32(color);
-  uint16_t y = static_cast<uint16_t>(c32.ch.red * 77 + c32.ch.green * 150 +
-                                     c32.ch.blue * 29);
-  return static_cast<uint8_t>(y >> 8);
 }
