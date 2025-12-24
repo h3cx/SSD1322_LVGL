@@ -33,7 +33,7 @@ constexpr int8_t PIN_RST = 16;
 
 SSD1322_LVGL display(SPI, PIN_CS, PIN_DC, PIN_RST, 8000000);
 
-static uint8_t lvgl_buf[SSD1322_LVGL::kWidth * 32];
+static uint8_t lvgl_buf[SSD1322_LVGL::kWidth * SSD1322_LVGL::kHeight];
 
 void setup() {
   lv_init();
@@ -43,10 +43,9 @@ void setup() {
                                          SSD1322_LVGL::kHeight);
   lv_display_set_color_format(disp, LV_COLOR_FORMAT_L8);
   lv_display_set_buffers(disp, lvgl_buf, nullptr, sizeof(lvgl_buf),
-                         LV_DISPLAY_RENDER_MODE_PARTIAL);
+                         LV_DISPLAY_RENDER_MODE_FULL);
   lv_display_set_user_data(disp, &display);
   lv_display_set_flush_cb(disp, SSD1322_LVGL::lvglFlush);
-  lv_display_set_rounder_cb(disp, SSD1322_LVGL::lvglRounder);
 }
 
 void loop() {
@@ -63,6 +62,9 @@ over SPI.
 
 The rounder callback ensures the LVGL render area always aligns to 2-pixel
 boundaries so that 4bpp packed bytes are correctly formed for the SSD1322.
+Some LVGL Arduino builds do not expose `lv_display_set_rounder_cb`. In that
+case, use `LV_DISPLAY_RENDER_MODE_FULL` with a full-frame buffer (as shown
+above) to avoid odd-width flush areas.
 
 ## Test helpers
 
