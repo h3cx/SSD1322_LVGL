@@ -275,7 +275,7 @@ void SSD1322_LVGL::initDisplay() {
 
 uint8_t SSD1322_LVGL::lvglColorToL8(lv_color_t color) {
 #if LV_COLOR_DEPTH == 8
-  return color.full;
+  return lv_color_to8(color);
 #else
   lv_color32_t c32 = lv_color_to32(color);
   uint16_t y = static_cast<uint16_t>(c32.ch.red * 77 + c32.ch.green * 150 +
